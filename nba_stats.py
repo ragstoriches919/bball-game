@@ -20,13 +20,13 @@ def get_df_player_stats(year):
     df_basic["position"] = df_basic["positions"].astype(str).str.split(":").str[1]
     df_basic["position"] = df_basic["position"].map(lambda x: x.lstrip(" '").rstrip(">]'"))
 
-    groupby_cols = ["slug", "name", "age"]
-    sum_cols = ["games_played", "games_started", "minutes_played", "made_field_goals", "attempted_field_goals",
+    cols_groupby = ["slug", "name", "age"]
+    cols_basic = ["games_played", "games_started", "minutes_played", "made_field_goals", "attempted_field_goals",
                 "made_three_point_field_goals", "attempted_three_point_field_goals", "made_free_throws",
                 "attempted_free_throws", "offensive_rebounds", "defensive_rebounds", "assists", "steals", "blocks",
                 "turnovers", "personal_fouls", "points"]
 
-    df_stats = df_basic.groupby(groupby_cols)[sum_cols].sum().reset_index()
+    df_stats = df_basic.groupby(cols_groupby)[cols_basic].sum().reset_index()
     df_stats["points_per_game"] = df_stats["points"] / df_stats["games_played"]
     df_stats["assists_per_game"] = df_stats["assists"] / df_stats["games_played"]
     df_stats["rebounds"] = df_stats["offensive_rebounds"] + df_stats["defensive_rebounds"]
@@ -37,9 +37,17 @@ def get_df_player_stats(year):
     # df_stats.to_csv('test.csv')
 
     adv = client.players_advanced_season_totals(season_end_year=2018)
+    
     df_advanced = pd.json_normalize(adv)
 
+    cols_groupby = ["slug", "name", "age"]
+    cols_adv =
+    
+    df_total_minutes = df_advanced.groupby(cols_groupby)["minutes_played"].sum().reset_index()
+    df_total_minutes = df_total_minutes.rename(columns = {"minutes_played": "minutues_played_total"})
 
+    df_advanced = pd.merge(df_advanced, df_total_minutes, on=cols_groupby)
+    df_advanced["weight"] = df_advanced["minutes_played"] / df_advanced["minutues_played_total"]
 
     return df_basic
 
