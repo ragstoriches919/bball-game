@@ -49,45 +49,109 @@ def get_df_pct_ranks(df_all):
     for col in cols_stats:
         df_all[col + "_pctRank"] = df_all.groupby(cols_groupby)[col].rank(pct=True)
 
-    df_all.to_csv('test.csv')
+    # df_all.to_csv('test.csv')
 
     return df_all
 
-def get_score_shooter(df):
+
+def helper_get_df_scores(dict_weights):
 
     """
-
-    :param df: DataFrame, from nba_stats.df.get_df_all_stats()
+    Get scores for any set of columns/weights
+    :param dict_weights: Dictionary Ex.) {"true_shooting_percentage": 0.4,"made_three_point_field_goals": 0.4, "field_goal_pct": 0.2}
     :return: DataFrame
     """
-    pass
-    cols_groupby = ["slug", "name", "age", "position"]
-    weight_tsp = 0.5
-    weight_3pm = 0.3
-    weight_fgp = 0.2
+
+    cols_id = ["slug", "name", "age", "position"]
+    df_scores = df_ranks[cols_id]
+    df_scores["score"] = 0
+
+    for key in dict_weights:
+        df_scores[key + "_score"] = df_ranks[key + "_pctRank"] * dict_weights[key]
+
+    for key in dict_weights:
+        df_scores["score"] += df_scores[key+"_score"]
+
+    return df_scores
 
 
+def get_df_score_shooter():
 
-    pass
+    """
+    Get shooter scores
+    :param df_ranks: DataFrame, from get_df_pct_ranks()
+    :return: DataFrame
+    """
 
-def get_score_scorer(df_basic, df_adv):
-    pass
+    dict_weights = {"true_shooting_percentage": 0.4,
+                    "made_three_point_field_goals": 0.4,
+                    "field_goal_pct": 0.2}
 
-def get_score_rebounder(df_basic, df_adv):
-    pass
+    df_shooter = helper_get_df_scores(dict_weights)
+    # df_shooter.to_csv('test.csv', index=False)
+    return df_shooter
 
-def get_score_passer(df_basic, df_adv):
-    pass
 
-def get_score_defender(df_basic, df_adv):
-    pass
+def get_df_score_scorer():
+
+    """
+    Get scorer scores
+    :param df_ranks: DataFrame, from get_df_pct_ranks()
+    :return: DataFrame
+    """
+
+    dict_weights = {"points_per_game": 0.4,
+                    "made_field_goals": 0.3,
+                    "offensive_win_shares": 0.3}
+
+    df_scorer = helper_get_df_scores(dict_weights)
+
+    return df_scorer
+
+
+def get_df_score_rebounder():
+
+    dict_weights = {"rebounds_per_game": 0.5,
+                    "total_rebound_percentage": 0.5}
+
+    df_rebounder = helper_get_df_scores(dict_weights)
+
+    return df_rebounder
+
+
+def get_df_score_passer():
+
+    dict_weights = {"assists_per_game": 0.5,
+                    "assist_percentage": 0.5}
+
+    df_passer = helper_get_df_scores(dict_weights)
+
+    return df_passer
+
+
+def get_df_score_defender():
+
+    dict_weights = {"defensive_win_shares": 0.5,
+                    "steal_percentage": 0.25,
+                    "block_percentage": 0.25}
+
+    df_defender = helper_get_df_scores(dict_weights)
+
+    return df_defender
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Main Function
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 if __name__ == '__main__':
 
     df = pd.read_pickle(PICKLE_PATH_ALL_STATS)
 
-    get_df_pct_ranks(df)
+    df_ranks = get_df_pct_ranks(df)
+    df = get_df_score_defender()
+    df.to_csv('test.csv', index=False)
+    print(df)
+
+
+

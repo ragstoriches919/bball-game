@@ -117,7 +117,12 @@ def get_df_all_stats(year, use_pickle=False):
         df_adv = get_df_advanced_player_stats(year)
 
     df_all = pd.merge(df_basic, df_adv, on=cols_merge)
+
+    # Remove accent marks
+    df_all["name"] = df_all["name"].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
+
     df_all.to_pickle(PICKLE_PATH_ALL_STATS)
+
 
     return df_all
 
@@ -127,4 +132,4 @@ def get_df_all_stats(year, use_pickle=False):
 
 if __name__ == '__main__':
 
-    get_df_all_stats(2021)
+    get_df_all_stats(2021, use_pickle=False)
