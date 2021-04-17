@@ -188,6 +188,50 @@ def get_df_score_defender():
     return df_defender
 
 
+
+def get_df_player_caliber(df_all_scores):
+
+    df_all_scores["rank_player"] = df_all_scores["score_agg"].rank(ascending=False)
+    df_all_scores["rank_player_pct"] = df_all_scores["score_agg"].rank(pct=True)
+
+    df_all_scores["caliber"] = np.where(df_all_scores["rank_player"] <= 5, "superstar",
+                                        np.where(df_all_scores["rank_player"] <= 40, "star",
+                                                 np.where(df_all_scores["rank_player"] <= 150, "role_player", "bench_warmer")))
+
+    return df_all_scores
+
+
+def get_df_player_labels(df_all_scores):
+
+    # for index, row in df_all_scores.iterrows():
+    slice = df_all_scores[['score_defender', 'score_passer', 'score_rebounder', 'score_scorer', 'score_shooter']]
+    index_list = np.argsort(-slice.values, axis=1)
+    array_col_order = slice.columns[index_list]
+    df_temp = pd.DataFrame(data = array_col_order)
+
+    for col in df_temp.columns:
+        df_temp[col] = df_temp[col].str.replace("score_", "")
+
+    df_temp["labels_ordered"] = ""
+    for col in df_temp.columns:
+        if col != "labels_ordered":
+
+            if col == df_temp[4].name:
+                df_temp["labels_ordered"] += (df_temp[col].astype(str))
+            else:
+                df_temp["labels_ordered"] += (df_temp[col].astype(str) + ",")
+
+    df_all_scores = df_all_scores.join(df_temp)
+
+    # Finally, assign the labels!
+    df_all_scores["labels"] = np.where(df_all_scores["caliber"] == "superstar", df_all_scores["labels_ordered"].str.split(",").str[:4],
+                                       np.where(df_all_scores["caliber"] == "star", df_all_scores["labels_ordered"].str.split(",").str[:3],
+                                       np.where(df_all_scores["caliber"] == "role_player", df_all_scores["labels_ordered"].str.split(",").str[:2],
+                                                df_all_scores["labels_ordered"].str.split(",").str[:1])))
+
+    return df_all_scores
+
+
 def get_df_all_scores(year, use_pickle=False):
 
     """
@@ -238,6 +282,7 @@ def get_df_all_scores(year, use_pickle=False):
     df_all_scores = pd.merge(df_all_scores, df_all_stats, on=cols_id)
     df_all_scores = pd.merge(df_all_scores, df_ranks, on=cols_id)
     df_all_scores = get_df_player_caliber(df_all_scores)
+    df_all_scores = get_df_player_labels(df_all_scores)
 
     df_all_scores.to_pickle(PICKLE_PATH_ALL_SCORES)
     df_all_scores.to_csv('scores.csv', index=False)
@@ -245,23 +290,8 @@ def get_df_all_scores(year, use_pickle=False):
     return df_all_scores
 
 
-def get_df_player_caliber(df_all_scores):
-
-    df_all_scores["rank_player"] = df_all_scores["score_agg"].rank(ascending=False)
-    df_all_scores["rank_player_pct"] = df_all_scores["score_agg"].rank(pct=True)
-
-    df_all_scores["caliber"] = np.where(df_all_scores["rank_player"] <= 5, "superstar",
-                                        np.where(df_all_scores["rank_player"] <= 40, "star",
-                                                 np.where(df_all_scores["rank_player"] <= 150, "role_player", "bench_warmer")))
-
-    return df_all_scores
 
 
-# def get_df_player_labels(df_all_scores):
-#
-#     df_all_scores["labels"] = np.where(df_all_scores["caliber"] == "superstar" )
-#
-#     pass
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,15 +305,7 @@ if __name__ == '__main__':
     # df_all_scores = pd.read_pickle(PICKLE_PATH_ALL_SCORES)
     # df_ranks = get_df_pct_ranks(df)
 
-    get_df_all_scores(1998)
-
-    # df_pct_ranks = get_df_pct_ranks(df_all_stats)
-    # df_pct_ranks.to_csv('test.csv', index = False)
-
-    # get_df_all_scores(2007, use_pickle=False)
-
-    # get_df_player_caliber(df_all_scores)
-
+   get_df_all_scores(2021, use_pickle=False)
 
 
 
