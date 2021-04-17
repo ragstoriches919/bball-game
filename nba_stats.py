@@ -39,6 +39,8 @@ def get_df_basic_player_stats(year):
     df_stats["assists_per_game"] = df_stats["assists"] / df_stats["games_played"]
     df_stats["rebounds"] = df_stats["offensive_rebounds"] + df_stats["defensive_rebounds"]
     df_stats["rebounds_per_game"] = df_stats["rebounds"] / df_stats["games_played"]
+    df_stats["made_three_point_field_goals_per_game"] = df_stats["made_three_point_field_goals"] / df_stats["games_played"]
+
     df_stats["field_goal_pct"] = df_stats["made_field_goals"] / df_stats["attempted_field_goals"]
     df_stats["field_goal_pct_three_pt"] = df_stats["made_three_point_field_goals"] / df_stats["attempted_three_point_field_goals"]
 
@@ -107,6 +109,8 @@ def get_df_all_stats(year, use_pickle=False):
     :return:
     """
 
+    print("Getting all stats for {}".format(year))
+
     cols_merge = ["slug", "name", "age", "position"]
 
     if use_pickle:
@@ -123,7 +127,6 @@ def get_df_all_stats(year, use_pickle=False):
 
     df_all.to_pickle(PICKLE_PATH_ALL_STATS)
 
-
     return df_all
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,4 +135,8 @@ def get_df_all_stats(year, use_pickle=False):
 
 if __name__ == '__main__':
 
-    get_df_all_stats(2021, use_pickle=False)
+    year = 2021
+    # get_df_all_stats(2021, use_pickle=False)
+
+    df = get_df_basic_player_stats(year)
+    print(df)
