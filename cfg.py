@@ -1,0 +1,6 @@
+PICKLE_PATH_BASIC_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_basic.pkl"
+PICKLE_PATH_ADV_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_advanced.pkl"
+PICKLE_PATH_ALL_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_all.pkl"
+PICKLE_PATH_PCT_RANKS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\pct_ranks.pkl"
+PICKLE_PATH_ALL_SCORES  = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\scores_all.pkl"
+PICKLE_PATH_ALL_SCORES_ALL_YEARS  = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\scores_all_years_all.pkl"

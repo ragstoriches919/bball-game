@@ -4,10 +4,11 @@ from nba_api.stats.endpoints import commonplayerinfo
 from nba_api.stats.endpoints import playercareerstats
 import basketball_reference_web_scraper as bball
 from basketball_reference_web_scraper import client
+import cfg as c
 
-PICKLE_PATH_BASIC_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_basic.pkl"
-PICKLE_PATH_ADV_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_advanced.pkl"
-PICKLE_PATH_ALL_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_all.pkl"
+# PICKLE_PATH_BASIC_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_basic.pkl"
+# PICKLE_PATH_ADV_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_advanced.pkl"
+# PICKLE_PATH_ALL_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_all.pkl"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Functions
@@ -44,7 +45,7 @@ def get_df_basic_player_stats(year):
     df_stats["field_goal_pct"] = df_stats["made_field_goals"] / df_stats["attempted_field_goals"]
     df_stats["field_goal_pct_three_pt"] = df_stats["made_three_point_field_goals"] / df_stats["attempted_three_point_field_goals"]
 
-    df_stats.to_pickle(PICKLE_PATH_BASIC_STATS)
+    df_stats.to_pickle(c.PICKLE_PATH_BASIC_STATS)
 
     return df_stats
 
@@ -95,7 +96,7 @@ def get_df_advanced_player_stats(year):
     cols_df_stats_agg = [col.replace("_contrib", "") for col in df_stats_agg.columns]
     df_stats_agg.columns = cols_df_stats_agg
 
-    df_stats.to_pickle(PICKLE_PATH_ADV_STATS)
+    df_stats.to_pickle(c.PICKLE_PATH_ADV_STATS)
 
     return df_stats_agg
 
@@ -114,8 +115,8 @@ def get_df_all_stats(year, use_pickle=False):
     cols_merge = ["slug", "name", "age", "position"]
 
     if use_pickle:
-        df_basic = pd.read_pickle(PICKLE_PATH_BASIC_STATS)
-        df_adv = pd.read_pickle(PICKLE_PATH_ADV_STATS)
+        df_basic = pd.read_pickle(c.PICKLE_PATH_BASIC_STATS)
+        df_adv = pd.read_pickle(c.PICKLE_PATH_ADV_STATS)
     else:
         df_basic = get_df_basic_player_stats(year)
         df_adv = get_df_advanced_player_stats(year)
@@ -125,7 +126,7 @@ def get_df_all_stats(year, use_pickle=False):
     # Remove accent marks
     df_all["name"] = df_all["name"].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
 
-    df_all.to_pickle(PICKLE_PATH_ALL_STATS)
+    df_all.to_pickle(c.PICKLE_PATH_ALL_STATS)
 
     return df_all
 

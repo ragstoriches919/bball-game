@@ -1,18 +1,9 @@
 import pandas as pd
 import numpy as np
-import nba_api
-from nba_api.stats.endpoints import commonplayerinfo
-from nba_api.stats.endpoints import playercareerstats
-import basketball_reference_web_scraper as bball
-from basketball_reference_web_scraper import client
-
-PICKLE_PATH_BASIC_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_basic.pkl"
-PICKLE_PATH_ADV_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_advanced.pkl"
-PICKLE_PATH_ALL_STATS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\stats_all.pkl"
-PICKLE_PATH_PCT_RANKS = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\pct_ranks.pkl"
-PICKLE_PATH_ALL_SCORES  = r"C:\Users\ragst\PycharmProjects\bball_game_stats\pickled_files\scores_all.pkl"
-
+import datetime
 import nba_stats as stats
+
+import cfg as c
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Helper Functions
@@ -33,7 +24,7 @@ def list_diff(li1, li2):
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Functions
+# Work Functions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -71,7 +62,7 @@ def get_df_pct_ranks(df_all):
         df_ranks[col + "_pctRank"] = df_ranks.groupby(cols_groupby)[col].rank(pct=True)
         df_ranks[col + "_pctRankOverall"] = df_ranks[col].rank(pct=True)
 
-    df_ranks.to_pickle(PICKLE_PATH_PCT_RANKS)
+    df_ranks.to_pickle(c.PICKLE_PATH_PCT_RANKS)
 
     return df_ranks
 
@@ -84,7 +75,7 @@ def helper_get_df_scores(dict_weights):
     :return: DataFrame
     """
 
-    df_ranks = pd.read_pickle(PICKLE_PATH_PCT_RANKS)
+    df_ranks = pd.read_pickle(c.PICKLE_PATH_PCT_RANKS)
     cols_id = ["slug", "name", "age", "position"]
     df_scores = df_ranks[cols_id]
     df_scores["score"] = 0
@@ -188,7 +179,6 @@ def get_df_score_defender():
     return df_defender
 
 
-
 def get_df_player_caliber(df_all_scores):
 
     df_all_scores["rank_player"] = df_all_scores["score_agg"].rank(ascending=False)
@@ -203,7 +193,6 @@ def get_df_player_caliber(df_all_scores):
 
 def get_df_player_labels(df_all_scores):
 
-    # for index, row in df_all_scores.iterrows():
     slice = df_all_scores[['score_defender', 'score_passer', 'score_rebounder', 'score_scorer', 'score_shooter']]
     index_list = np.argsort(-slice.values, axis=1)
     array_col_order = slice.columns[index_list]
@@ -248,8 +237,8 @@ def get_df_all_scores(year, use_pickle=False):
         df_all_stats = stats.get_df_all_stats(year, use_pickle=use_pickle)
         df_ranks = get_df_pct_ranks(df_all_stats)
     else:
-        df_all_stats = pd.read_pickle(PICKLE_PATH_ALL_STATS)
-        df_ranks = pd.read_pickle(PICKLE_PATH_PCT_RANKS)
+        df_all_stats = pd.read_pickle(c.PICKLE_PATH_ALL_STATS)
+        df_ranks = pd.read_pickle(c.PICKLE_PATH_PCT_RANKS)
 
     df_scorer = get_df_score_scorer()
     df_shooter = get_df_score_shooter()
@@ -284,30 +273,41 @@ def get_df_all_scores(year, use_pickle=False):
     df_all_scores = get_df_player_caliber(df_all_scores)
     df_all_scores = get_df_player_labels(df_all_scores)
 
-    df_all_scores.to_pickle(PICKLE_PATH_ALL_SCORES)
+    df_all_scores.to_pickle(c.PICKLE_PATH_ALL_SCORES)
     df_all_scores.to_csv('scores.csv', index=False)
 
     return df_all_scores
 
 
+def get_df_all_scores_for_every_year():
 
+    """
+    Returns all scores and stats for all players in every year.
+    :return: DataFrame
+    """
 
+    df_all_scores = None
+
+    for year in range(1950, datetime.datetime.today().year + 1):
+        df = get_df_all_scores(year, use_pickle=False)
+        if df_all_scores is None:
+            df_all_scores = df
+        else:
+            df_all_scores = pd.concat([df_all_scores, df])
+
+    df_all_scores.to_pickle(c.PICKLE_PATH_ALL_SCORES_ALL_YEARS)
+    return df_all_scores
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Main Function
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 if __name__ == '__main__':
 
     # df_all_stats = pd.read_pickle(PICKLE_PATH_ALL_STATS)
     # df_all_scores = pd.read_pickle(PICKLE_PATH_ALL_SCORES)
     # df_ranks = get_df_pct_ranks(df)
 
-   get_df_all_scores(2021, use_pickle=False)
+   # get_df_all_scores(2021, use_pickle=False)
 
-
-
-
-
+    print(datetime.datetime.today().year)
