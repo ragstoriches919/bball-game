@@ -200,7 +200,7 @@ def get_df_player_labels(df_all_scores):
 
     for col in df_temp.columns:
         df_temp[col] = df_temp[col].str.replace("score_", "")
-
+    #
     df_temp["labels_ordered"] = ""
     for col in df_temp.columns:
         if col != "labels_ordered":
@@ -210,7 +210,8 @@ def get_df_player_labels(df_all_scores):
             else:
                 df_temp["labels_ordered"] += (df_temp[col].astype(str) + ",")
 
-    df_all_scores = df_all_scores.join(df_temp)
+    df_all_scores = df_all_scores.reset_index(drop=True)
+    df_all_scores = df_all_scores.join(df_temp, lsuffix='_left', rsuffix='_right')
 
     # Finally, assign the labels!
     df_all_scores["labels"] = np.where(df_all_scores["caliber"] == "superstar", df_all_scores["labels_ordered"].str.split(",").str[:4],
@@ -234,11 +235,7 @@ def get_df_all_scores(year, use_pickle=False):
     cols_id = ["slug", "name", "age", "position"]
 
     if not use_pickle:
-        df_all_stats = stats.get_df_all_stats(year, use_pickle=use_pickle)
-        df_ranks = get_df_pct_ranks(df_all_stats)
-    else:
-        df_all_stats = pd.read_pickle(c.PICKLE_PATH_ALL_STATS)
-        df_ranks = pd.read_pickle(c.PICKLE_PATH_PCT_RANKS)
+        stats.get_df_all_stats(year, use_pickle=use_pickle)
 
     df_scorer = get_df_score_scorer()
     df_shooter = get_df_score_shooter()
@@ -258,6 +255,9 @@ def get_df_all_scores(year, use_pickle=False):
 
     df_all_scores = df_all_scores.sort_values(by=["score_agg"], ascending=False)
 
+    # Add year
+    df_all_scores["year"] = year
+
     # Re-Order Columns
     cols_score = []
     for col in df_all_scores.columns:
@@ -267,19 +267,40 @@ def get_df_all_scores(year, use_pickle=False):
     cols_in_order = cols_id + cols_score + list_diff(list(df_all_scores.columns), (cols_id + cols_score) )
     df_all_scores = df_all_scores[cols_in_order]
 
-    # Merge to get a master data set
-    df_all_scores = pd.merge(df_all_scores, df_all_stats, on=cols_id)
-    df_all_scores = pd.merge(df_all_scores, df_ranks, on=cols_id)
-    df_all_scores = get_df_player_caliber(df_all_scores)
-    df_all_scores = get_df_player_labels(df_all_scores)
-
     df_all_scores.to_pickle(c.PICKLE_PATH_ALL_SCORES)
     df_all_scores.to_csv('scores.csv', index=False)
-
     return df_all_scores
 
 
-def get_df_all_scores_for_every_year():
+def get_df_all_player_stats_in_one_year(year, use_pickle=False):
+
+    df_all_stats = get_df_all_scores(year, use_pickle=use_pickle)
+    df_all_stats = get_df_player_caliber(df_all_stats)
+    df_all_stats = get_df_player_labels(df_all_stats)
+
+    df_all_stats.to_pickle(c.PICKLE_PATH_ALL_SCORES)
+    df_all_stats.to_csv('scores.csv', index=False)
+
+
+    return df_all_stats
+
+#
+# def get_df_all_scores_and_labels(year, use_pickle=False):
+#
+#     if use_pickle:
+#         df_all_scores = pd.read_pickle(c.PICKLE_PATH_ALL_SCORES)
+#     else:
+#         df_all_scores = get_df_all_scores(year, use_pickle=False)
+#
+#     df_all_scores = get_df_player_labels(df_all_scores)
+#
+#     df_all_scores.to_pickle(c.PICKLE_PATH_ALL_SCORES)
+#     df_all_scores.to_csv('scores.csv', index=False)
+#
+#     return df_all_scores
+
+
+def get_df_all_scores_for_all_years():
 
     """
     Returns all scores and stats for all players in every year.
@@ -288,26 +309,56 @@ def get_df_all_scores_for_every_year():
 
     df_all_scores = None
 
-    for year in range(1950, datetime.datetime.today().year + 1):
-        df = get_df_all_scores(year, use_pickle=False)
+    for year in range(2000, datetime.datetime.today().year + 1):
+        df = get_df_all_player_stats_in_one_year(year, use_pickle=False)
         if df_all_scores is None:
             df_all_scores = df
         else:
             df_all_scores = pd.concat([df_all_scores, df])
+        # print(df.columns)
+
 
     df_all_scores.to_pickle(c.PICKLE_PATH_ALL_SCORES_ALL_YEARS)
+
     return df_all_scores
 
+
+def get_df_random_players(year, num_players, caliber=None, label=None, use_pickle=False):
+
+    if use_pickle:
+        df_scores = pd.read_pickle(c.PICKLE_PATH_ALL_SCORES_ALL_YEARS)
+        df_scores = df_scores.loc[df_scores["year"]==year]
+    else:
+        df_scores = get_df_all_player_stats_in_one_year(year, use_pickle=use_pickle)
+
+    # Caliber
+    if caliber is not None:
+        df_scores = df_scores.loc[df_scores["caliber"] == caliber.lower()]
+
+    # Label
+    if label is not None:
+        df_scores = df_scores.loc[df_scores["position"].str.contains(label)]
+
+    df_players = df_scores.sample(num_players)
+    df_players = df_players.sort_values(by="score_agg", ascending=False)
+
+    print(df_players)
+
+    return df_players
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Main Function
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if __name__ == '__main__':
 
-    # df_all_stats = pd.read_pickle(PICKLE_PATH_ALL_STATS)
-    # df_all_scores = pd.read_pickle(PICKLE_PATH_ALL_SCORES)
-    # df_ranks = get_df_pct_ranks(df)
+    # get_df_all_scores(2021, use_pickle=False)
+    # df_all_scores = pd.read_pickle(c.PICKLE_PATH_ALL_SCORES)
+    # df = get_df_player_labels(df_all_scores)
+    # print(df)
 
-   # get_df_all_scores(2021, use_pickle=False)
+    # get_df_all_scores_for_all_years()
 
-    print(datetime.datetime.today().year)
+    get_df_random_players(2021, 10, caliber="star")
+
+    # df = get_df_all_player_stats_in_one_year(2000)
+    # print(df)

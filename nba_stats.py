@@ -134,6 +134,7 @@ def get_df_all_stats(year, use_pickle=False):
 # Main Function
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 if __name__ == '__main__':
 
     year = 2021
